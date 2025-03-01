@@ -1,0 +1,174 @@
+COMANDOS UTILIZADOS EN LABORATORIO IV
+-------------------------------------------------
+Administración de los servicios HTTP  (Apache2)
+--------------------------------------------------
+
+PRACTICA #1:
+
+
+sudo yum update -y
+sudo yum install httpd -y
+sudo systemctl enable httpd
+sudo systemctl start httpd
+http://192.168.100.33
+sudo nano /var/www/html/index.html (Para configurar la que esta por defecto)
+
+
+
+<html>
+<head><tittle>PRACTICA SO3</title></head>
+<body>
+<h1>Hola Mundo</h1>
+</body>
+</html>
+
+sudo systemctl restart httpd
+----------------------------------------------
+
+sudo nano /etc/httpd/conf.d/vhost80.conf
+
+<VirtualHost *80>
+DocumentRoot "/var/www/html"
+</VirtualHost>
+
+----------------------------------------
+sudo mkdir /var/www/misdatos
+sudo nano /var/www/misdatos/index.html
+
+<html>
+<head><tittle>Informacion Personal</title></head>
+<body>
+<h1>Mi nombre: Omar</h1>
+<p>Matricula: 20241163</p>
+<p>Materia: SO3 </p>
+</body>
+</html>
+
+---------------------------------------------
+sudo nano /etc/httpd/conf/httpd.conf
+
+(Y DEBAJO DE LISTEN 80 PONES: LISTEN 8080)
+
+-----------------------------------------------
+sudo nano /etc/httpd/conf.d/vhost8080.conf
+sudo nano /etc/httpd/conf.d/vhost80.conf
+
+<VirtualHost *8080>
+DocumentRoot "/var/www/misdatos"
+</VirtualHost>
+
+------------------------------------------------------------------------------
+
+PRACTICA #2:
+
+1-) Instalar Postfix:
+----------------------------------------------------------------------------------
+
+dnf install postfix
+ 
+-------------------
+2-) Iniciar el servicio:
+
+systemctl start postfix 
+
+------------------------
+
+Luego a configurarlo:
+
+nano /etc/postfix/main.cf
+
+------------------------------
+
+Comentamos lo de localhost y habilitamos all
+----------------------------------------
+
+En mynetworks ponemos la ip tuya y acuerdate de dejar el 0.
+-----------------------------------------------------------------
+Y luego bajamos a lo ultimo y ponemos:
+
+relayhost = [smtp.gmail.com]:587
+smtp_use_tls = yes
+smtp_tls_note_starttls_offer = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passed
+smtp_sasl_security_options = noanonymous
+
+
+Y guardamos
+---------------------------------------------
+Luego ponemos 
+
+nano /etc/postfix/sasl_passed 
+--------------------------------------------
+Y dentro de eso ponemos 
+
+[smtp.gmail.com]:587 "EL CORREO": *la contra api*
+
+
+-------------------------------------------------------
+
+Le asignas los permisos al archivo que creaste 
+
+chmod 600 /etc/postfix/sasl_passed
+
+postmap /etc/postfix/sasl_passed
+-----------------------------------------------
+Haz un date y pon
+
+echo "Nombre:Omar Cuevas De La Cruz, Matricula:20241163" | mail -s "MambruSeFueALaGuerra" os3conadrian@gmail.com
+
+-------------------------------------------------------------------------------------------------------------------
+
+Practica #3: 
+
+sudo dnf install cups 
+sudo dnf install cups-pdf (no te va a servir, porque ya no esta en los repositorios de redhat, utiliza esta pagina para instalarlo: https://software.opensuse.org/package/cups-pdf?search_term=cups-pdf)
+sudo systemctl start cups
+sudo systemctl enable cups
+sudo systemctl status cups
+http://localhost:631 (La ip de la maquina virtual)
+sudo nano /etc/cups/cupsd.conf
+------------------
+Permitir acceso remoto:
+Busca las siguientes líneas y realiza los cambios indicados:
+
+Cambia Listen localhost:631 a Listen 0.0.0.0:631 para permitir conexiones desde cualquier dirección IP.
+
+Cambia Allow from localhost a Allow from all en las secciones <Location />, <Location /admin>, y <Location /admin/conf>.------------------------------
+-----------------------------------------------
+Guarda los cambios y reinicia el servicio CUPS:
+
+sudo systemctl restart cups
+-----------------------------------------------
+Habilitar el puerto 631 en el firewall:
+Permite el tráfico en el puerto 631 a través del firewall:
+
+sudo firewall-cmd --permanent --add-port=631/tcp
+sudo firewall-cmd --reload
+
+--------------------------------------------
+Configurar la Impresora Virtual PDF
+Abre un navegador y visita:
+
+http://<IP-del-servidor>:631
+Agregar una nueva impresora:
+
+Haz clic en Administración > Agregar impresora.
+
+Selecciona la impresora CUPS-PDF (Virtual PDF Printer).
+
+Asegúrate de habilitar la opción Compartir esta impresora.
+
+
+Seleccionar el controlador
+
+Elige un controlador genérico o el archivo PPD proporcionado por cups-pdf.
+
+Finaliza la configuración.
+
+Copias la IRL y vas a "Impresoras y scanners" en tu maquina host de Windows, buscar impresora, agregar manualmente y seleccionas "Seleccionar una impresora compartida por nombre y pegas la irl de la impresora virtual quitando la s de "HTTPS". Si no te sirve asi, dale a Agregar una impresora con una direccion IP o un nombre de Host y en vez de HTTP pones "IPP:".
+-------------------------------------------------------------------------------------------------------------
+
+
+
+
