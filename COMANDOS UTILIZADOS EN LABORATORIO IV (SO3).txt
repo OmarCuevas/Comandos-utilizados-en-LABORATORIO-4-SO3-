@@ -169,6 +169,113 @@ Finaliza la configuración.
 Copias la IRL y vas a "Impresoras y scanners" en tu maquina host de Windows, buscar impresora, agregar manualmente y seleccionas "Seleccionar una impresora compartida por nombre y pegas la irl de la impresora virtual quitando la s de "HTTPS". Si no te sirve asi, dale a Agregar una impresora con una direccion IP o un nombre de Host y en vez de HTTP pones "IPP:".
 -------------------------------------------------------------------------------------------------------------
 
+UN SCRIPT QUE TE PREGUNTE A QUIEN IRA DIRIGIDO EL CORREO Y EL ASUNTO, Y EN EL CUERPO ADICIONAL A LO QUE PONGAS QUE MANDE LA HORA ACTUAL DEL SERVIDOR DE CORREOS: OS3CONADRIAN@GMAIL.COM
 
+1-) Crear el archivo de nano para el Script:
+
+1- nano email.sh
+
+#!/bin/bash
+
+# Solicitar información
+read -p "Destinatario del correo: " destinatario
+read -p "Asunto del correo: " asunto
+read -p "Cuerpo del mensaje: " cuerpo
+
+# Obtener hora actual
+hora_actual=$(date +"%H:%M:%S")
+
+# Enviar correo con mailx
+echo -e "$cuerpo\n\nHora del servidor: $hora_actual" | mailx -s "$asunto" -r "omarcuevasgm@mail.com" "$destinatario"
+
+# Verificar envío
+if [ $? -eq 0 ]; then
+    echo "✅ Correo enviado exitosamente a $destinatario"
+else
+    echo "❌ Error al enviar el correo. Verifica la configuración de mailx."
+fi
+
+2- Cerramos y guardamos.
+
+
+Y LE DAMOS PERMISO DE EJECUCION:
+
+ chmod +x email.sh
+
+./email.sh para ejecutarlo. 
+
+=============================================================================================
+
+2-) INSTALAR POSTFIX:
+
+1- sudo dnf install -y mailx postfix
+
+============================================================================================
+
+3-) INICIAR EL SERVICIO DE POSTFIX:
+
+1- sudo systemctl start postfix 
+
+2- sudo systemctl enable postfix
+
+3- sudo systemctl status postfix
+
+==================================================================================================
+
+4-) MODIFICAR EL ARCHIVO DE CONFIGURACION DE POSTFIX:
+
+1- sudo nano /etc/postfix/main.cf 
+
+BUSCAR LA LINEA DONDE DICE: inet_interfaces = localhost <================= COMENTALA CON #.
+
+Y QUITA DE COMENTARIO LA QUE SE LLAMA: inet_interfaces = all.
+
+----------------------------------------------------------------------------------------------------
+
+2- Ahora bbusca donde dice: mynetworks = 168.100.189.0/28 127.0.0.0/8 
+
+Y cambiala por tu ip asi: 192.168.100.0/24 127.0.0.0/8.
+
+----------------------------------------------------------------------------------------------------
+
+3- AHORA VE PARA ABAJO DEL TODOOO! Y PON LO SIGUIENTE: <==================== NO TINES QUE BORRAR NADA, SOLO PONLO JUSTO DEBAJO DE TODO.
+
+relayhost = [smtp.gmail.com]:587
+smtp_use_tls = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_tls_CAfile = /etc/ssl/certs/ca-bundle.crt
+
+4- Salimos y guardamos.
+
+
+==========================================================================================================
+
+5- sudo nano /etc/postfix/sasl_passwd
+
+[smtp.gmail.com]:587 omarcuevasgm@gmail.com:*TU CONTRASEÑA DE API DE GOOGLE*
+
+Salimos y guardamos.
+
+--------------------------------------------------------------------------------------------
+
+6- sudo chmod 600 /etc/postfix/sasl_passwd
+
+7- sudo postmap /etc/postfix/sasl_passwd
+
+===============================================================================================
+
+5-) Reiniciar Postfix:
+
+sudo systemctl restart postfix
+sudo systemctl enable postfix
+======================================================================================================
+6-) Probar el envío manualmente:
+
+echo "Prueba de correo" | mailx -s "Asunto de prueba" -r "omarcuevasgm@gmail.com" "antiomarz@gmail.com"
+
+---------------------------------------------------------------------------------------------------------
+SI FUNCIONA EJECUTA EL SCRIPT. 
 
 
